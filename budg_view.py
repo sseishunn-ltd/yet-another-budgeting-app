@@ -12,18 +12,15 @@ class TransactionListView:
         # TODO: should be allowing to select columns to filter on and values for that
         pass
 
-
 class TransactionCreateView:
     def show_transaction_creation_result(self):
         # This should return the confirmation and the line that was added to table
         pass
 
-
 class TransactionEditView:
     def show_transaction_update_result(self):
         # This should return the confirmation and the diff
         pass
-
 
 class TransactionDeleteView:
     def show_transaction_delete_result(self):

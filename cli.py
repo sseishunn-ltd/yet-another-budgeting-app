@@ -3,11 +3,10 @@
 import argparse
 import budg_model as model
 import budg_view as view
-import budg_controller as ctrl
 from datetime import datetime
-from tabulate import tabulate
 
 def main():
+
     # Parsing command line arguments
     parser = argparse.ArgumentParser(description="CLI tool to view and make records of transactions in budget.", add_help=True)
     subparsers = parser.add_subparsers(title = "Work with transactions", metavar=None, dest="subcommands")
@@ -54,7 +53,7 @@ def main():
     parser_delete = subparsers.add_parser("delete", help = "Delete transaction - looked up by provided parameter values. \
         If no parameters are set, all transactions will be deleted!")
     parser_delete.add_argument("--tr_id", help="Transaction ID.")
-    parser_delete.add_argument("--source", help="Source account or payee.")
+    parser_delete.add_argument("--source_from", help="Source account or payee.")
     parser_delete.add_argument("--destination", help="Destination account or payee.")
     parser_delete.add_argument("--category", help="Category to which the transaction is attributed.")
     parser_delete.add_argument("--amount", type=float, help="Amount of the transaction.")
@@ -83,36 +82,39 @@ def main():
 
     # Get UNIX timestamp for date
     # TODO: parse timestamp from parameters and use it if provided!
-    if args.timestamp == None:
-        dt_input = datetime.today()
-    else:
-        dt_input = datetime.fromisoformat(args.timestamp)
-    timestamp = int(datetime.timestamp(dt_input))
+    if args.subcommands.lower() == "add":
+        try:
+            dt_input = datetime.fromisoformat(args.timestamp)
+            timestamp = int(datetime.timestamp(dt_input))
+        except:
+            dt_input = datetime.today()
+            timestamp = int(datetime.timestamp(dt_input))
 
     if args.subcommands.lower() == 'read':
-        get_list = ctrl.TransactionController('TransactionListView','Transaction')
+        display_results = view.TransactionListView()
         if args.tail:
-            get_list.view_transactions(items = args.tail)
+            head, result = model.Transaction.get_last_x(args.tail)
+            display_results.display_transactions(head, result)
         else:
-            # my screen fits ~28 rows, BTW
-            get_list.view_transactions()
+            head, result = model.Transaction.get_all()
+            display_results.display_transactions(head, result)
 
     if args.subcommands.lower() == 'add':
-        create_trn = ctrl.TransactionController('TransactionCreateView','Transaction')
-        create_trn.create_new_transaction(date=timestamp, source_from=args.source_from, destination=args.destination, \
-            category=args.category, amount=args.amount, comment=args.comment)
+        # TODO: get all necessary IDs for the shit provided from interface here
+        trans = model.Transaction() # no params because we don't look up anything
+        trans.save(created_at=timestamp, from_id=args.source_from, to_id=args.destination, category_id=args.category, \
+            amount=args.amount, comment=args.comment)
 
     if args.subcommands.lower() == 'edit':
-        edit_trn = ctrl.TransactionController('TransactionCreateView','Transaction')
-        edit_trn.edit_transactions(tr_id=args.tr_id, date=args.date, source_from=args.source_from, \
-            destination=args.destination, category=args.category, amount=args.amount, comment=args.comment, \
-                date_new=args.date_new, source_from_new=args.source_from_new, destination_new=args.destination_new, \
-                    category_new=args.category_new, amount_new=args.amount_new, comment_new=args.comment_new)
+        trans = model.Transaction(transaction_id=args.tr_id, created_at=args.date, from_id=args.source_from, \
+            to_id=args.destination, category_id=args.category, amount=args.amount, comment=args.comment)
+        trans.update(created_at=args.date_new, from_id=args.source_from_new, to_id=args.destination_new, \
+            category_id=args.category_new, amount=args.amount_new, comment=args.comment_new)
 
     if args.subcommands.lower() == 'delete':
-        delete_trn = ctrl.TransactionController('TransactionDeleteView','Transaction')
-        delete_trn.delete_transactions(tr_id=args.tr_id, source_from=args.source, \
-            destination=args.destination, category=args.category, amount=args.amount, comment=args.comment)
+        trans = model.Transaction(transaction_id=args.tr_id, created_at=None, from_id=args.source_from, to_id=args.destination, \
+            category_id=args.category, amount=args.amount, comment=args.comment)
+        trans.delete()
 
     # Debug config
     config = vars(args)
