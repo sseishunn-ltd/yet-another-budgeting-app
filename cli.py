@@ -83,17 +83,17 @@ def main():
     # Get UNIX timestamp for date
     # TODO: parse timestamp from parameters and use it if provided!
     if args.subcommands.lower() == "add":
-        try:
+        if args.timestamp:
             dt_input = datetime.fromisoformat(args.timestamp)
             timestamp = int(datetime.timestamp(dt_input))
-        except:
+        else:
             dt_input = datetime.today()
             timestamp = int(datetime.timestamp(dt_input))
 
     if args.subcommands.lower() == 'read':
         display_results = view.TransactionListView()
         if args.tail:
-            head, result = model.Transaction.get_last_x(args.tail)
+            head, result = model.Transaction.get_last_x(args.tail, 1)
             display_results.display_transactions(head, result)
         else:
             head, result = model.Transaction.get_all()
@@ -111,6 +111,7 @@ def main():
         trans.update(created_at=args.date_new, from_id=args.source_from_new, to_id=args.destination_new, \
             category_id=args.category_new, amount=args.amount_new, comment=args.comment_new)
 
+    # IMPORTANT: it only works by transaction for now
     if args.subcommands.lower() == 'delete':
         trans = model.Transaction(transaction_id=args.tr_id, created_at=None, from_id=args.source_from, to_id=args.destination, \
             category_id=args.category, amount=args.amount, comment=args.comment)
@@ -118,7 +119,8 @@ def main():
 
     # Debug config
     config = vars(args)
-    print(f"The arguments list: {config=}")
+    print("")
+    print(f"DEBUG: The arguments list: {config=}")
 
 if __name__ == "__main__":
     #Run as main program

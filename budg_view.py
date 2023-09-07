@@ -1,4 +1,3 @@
-import budg_controller as ctrl
 from tabulate import tabulate
 
 if __name__ == '__main__':
@@ -6,6 +5,7 @@ if __name__ == '__main__':
 
 class TransactionListView:
     def display_transactions(self, head, result):
+        print("")
         print(tabulate(result, headers = head, tablefmt = "rounded_grid", floatfmt=".2f"))
 
     def display_transactions_filtered(self, column = None, value = None):
@@ -13,16 +13,28 @@ class TransactionListView:
         pass
 
 class TransactionCreateView:
-    def show_transaction_creation_result(self):
-        # This should return the confirmation and the line that was added to table
-        pass
+    def show_transaction_creation_result(self, head, result):
+        print("");
+        print("The following line were added:")
+        print(tabulate(result, headers = head, tablefmt = "rounded_grid", floatfmt=".2f"))
 
 class TransactionEditView:
-    def show_transaction_update_result(self):
-        # This should return the confirmation and the diff
-        pass
+    # First render the line to be edited
+    def show_transaction_update_attempt(self, head, result):
+        print("");
+        print("Attempting to edit the following line:")
+        print(tabulate(result, headers = head, tablefmt = "rounded_grid", floatfmt=".2f"))
+    # Then show the result
+    def show_transaction_update_result(self, head, result):
+        print("");
+        print("The following edit was made:")
+        print(tabulate(result, headers = head, tablefmt = "rounded_grid", floatfmt=".2f"))
 
 class TransactionDeleteView:
+    def show_transaction_delete_attempt(self, head, result):
+        print("");
+        print("Attempting to delete the following line:")
+        print(tabulate(result, headers = head, tablefmt = "rounded_grid", floatfmt=".2f"))
     def show_transaction_delete_result(self):
-        # This should return the confirmation and the line that was deleted
-        pass
+        print("");
+        print("Transaction deleted successfully.")

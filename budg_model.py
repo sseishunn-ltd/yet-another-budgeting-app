@@ -1,4 +1,5 @@
 import sqlite3
+import budg_view as view
 
 DB = "budget.db"
 ERR_DB = "\nAn error occurred while working with the database:"
@@ -7,7 +8,6 @@ SUCCESS = "\nTransaction recorded successfully."
 
 if __name__ == '__main__':
     print("This module cannot be run on it's own.")
-
 
 class Transaction:
     """Methods for CRUD operations with the transaction entries. Lookup values go into object parameters, new values go into the method parameters."""
@@ -40,7 +40,9 @@ class Transaction:
         except Exception as e:
             print(ERR_NON_DB, str(e), "\n")
         else:
-            print(SUCCESS)
+            display_results = view.TransactionCreateView()
+            head, result = self.get_last_x(1)
+            display_results.show_transaction_creation_result(head, result)
             status = True
             return status
         finally:
@@ -53,6 +55,13 @@ class Transaction:
     def update(self, created_at=None, from_id=None, to_id=None, category_id=None, amount=None, comment=None):
         """Update the transaction in the database"""
         con = None
+        try:
+            display_results = view.TransactionEditView()
+            head, result = self.get_by_id(self.transaction_id)
+            display_results.show_transaction_update_attempt(head, result)
+        except:
+            pass
+
         try:
             con = sqlite3.connect(DB)
             cur = con.cursor()
@@ -109,7 +118,9 @@ class Transaction:
         except Exception as e:
             print(ERR_NON_DB, str(e), "\n")
         else:
-            print(SUCCESS)
+            display_results = view.TransactionEditView()
+            head, result = self.get_by_id(self.transaction_id)
+            display_results.show_transaction_update_result(head, result)
             status = True
             return status
         finally:
@@ -122,6 +133,16 @@ class Transaction:
     def delete(self):
         """Delete the transaction from the database"""
         con = None
+
+        # solves only the lookup by ID, nothing else
+        # TODO: add proper treatment of other deletion options
+        try:
+            display_results = view.TransactionDeleteView()
+            head, result = self.get_by_id(self.transaction_id)
+            display_results.show_transaction_delete_attempt(head, result)
+        except:
+            pass
+
         try:
             con = sqlite3.connect(DB)
             cur = con.cursor()
@@ -150,7 +171,8 @@ class Transaction:
         except Exception as e:
             print(ERR_NON_DB, str(e), "\n")
         else:
-            print(SUCCESS)
+            display_results = view.TransactionDeleteView()
+            display_results.show_transaction_delete_result()
             status = True
             return status
         finally:
@@ -217,7 +239,7 @@ class Transaction:
                 con.close()
 
     @staticmethod
-    def get_last_x(items):
+    def get_last_x(items, show_totals = None):
         """Retrieve last (items) transactions from the database"""
         con = None
         try:
@@ -250,19 +272,20 @@ class Transaction:
             #get table headers
             head = result[0].keys()
 
-            #get table footer
-            cur.execute("""
-                        SELECT 
-                            NULL, 
-                            'TOTAL', 
-                            SUM(amount), 
-                            NULL, 
-                            NULL, 
-                            NULL
-                        FROM transactions_EUR
-                        """)
-            totals = cur.fetchone()
-            result.append(totals)
+            if show_totals != None:
+                #get table footer
+                cur.execute("""
+                            SELECT 
+                                NULL, 
+                                'TOTAL', 
+                                SUM(amount), 
+                                NULL, 
+                                NULL, 
+                                NULL
+                            FROM transactions_EUR
+                            """)
+                totals = cur.fetchone()
+                result.append(totals)
 
             return head, result
 
@@ -277,6 +300,50 @@ class Transaction:
             if con:
                 con.close()
 
+    @staticmethod
+    def get_by_id(tr_id):
+        """Retrieve last (items) transactions from the database"""
+        con = None
+        try:
+            con = sqlite3.connect(DB)
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+
+            #get table rows
+            cur.execute(f"""
+                        SELECT datetime(a.created_at, 'unixepoch') as datetime, 
+                            b.category_name,
+                            CAST(a.amount AS FLOAT) as amount,
+                            c.account_name as acc_from,
+                            d.account_name acc_to, 
+                            a.comment
+                        FROM
+                            transactions_EUR as a
+                            LEFT JOIN categories as b ON a.category_id = b.category_id
+                            LEFT JOIN accounts as c ON a.from_id = c.account_id
+                            LEFT JOIN accounts as d ON a.to_id = d.account_id
+                        WHERE
+                            transaction_id = {tr_id}
+                        ORDER BY
+                            a.transaction_id
+                        """)
+            result = cur.fetchall()
+
+            #get table headers
+            head = result[0].keys()
+
+            return head, result
+
+        except sqlite3.Error as e:
+            print(ERR_DB, str(e), "\n")
+        except Exception as e:
+            print(ERR_NON_DB, str(e), "\n")
+
+        finally:
+            if cur:
+                cur.close()
+            if con:
+                con.close()
 
 class Category:
     #TODO: add CRUD methods for Category
