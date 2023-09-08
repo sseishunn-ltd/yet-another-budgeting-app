@@ -122,18 +122,16 @@ def main():
         'edit': edit_function,
         'delete': delete_function,
         }
-
         selected_function = subcommand_functions.get(parsed_args.subcommands.lower())
-
         if selected_function:
             selected_function(parsed_args)
         else:
             return
 
     # Debug config
-    # config = vars(parsed_args)
-    # print("")
-    # print(f"DEBUG: The arguments list: {config=}")
+    config = vars(parsed_args)
+    print("")
+    print(f"DEBUG: The arguments list: {config=}")
 
 if __name__ == "__main__":
     #Run as main program

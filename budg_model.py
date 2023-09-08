@@ -1,8 +1,6 @@
 import sqlite3
 import budg_view as view
 
-#dummy
-
 DB = "budget.db"
 ERR_DB = "\nAn error occurred while working with the database:"
 ERR_NON_DB = "Some error not related to database occured:"
@@ -135,12 +133,10 @@ class Transaction:
 
         # solves only the lookup by ID, nothing else
         # TODO: add proper treatment of other deletion options
-        try:
-            display_results = view.TransactionDeleteView()
-            head, result = self.get_by_id(self.transaction_id)
-            display_results.show_transaction_delete_attempt(head, result)
-        except:
-            pass
+
+        display_results = view.TransactionDeleteView()
+        head, result = self.get_by_id(self.transaction_id)
+        display_results.show_transaction_delete_attempt(head, result)
 
         try:
             con = sqlite3.connect(DB)
