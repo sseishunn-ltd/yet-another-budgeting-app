@@ -7,7 +7,6 @@ if __name__ == '__main__':
 class TransactionListView:
     def display_transactions(self, head, result):
         print(tabulate(result, headers = head, tablefmt = "rounded_grid", floatfmt=".2f"))
-
     def display_transactions_filtered(self, column = None, value = None):
         # TODO: should be allowing to select columns to filter on and values for that
         pass

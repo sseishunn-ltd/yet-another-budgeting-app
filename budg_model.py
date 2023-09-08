@@ -3,7 +3,6 @@ import sqlite3
 DB = "budget.db"
 ERR_DB = "\nAn error occurred while working with the database:"
 ERR_NON_DB = "Some error not related to database occured:"
-SUCCESS = "\nTransaction recorded successfully."
 
 if __name__ == '__main__':
     print("This module cannot be run on it's own.")
@@ -53,6 +52,11 @@ class Transaction:
     def update(self, created_at=None, from_id=None, to_id=None, category_id=None, amount=None, comment=None):
         """Update the transaction in the database"""
         con = None
+
+        display_results = view.TransactionEditView()
+        head, result = self.get_by_id(self.transaction_id)
+        display_results.show_transaction_update_attempt(head, result)
+
         try:
             con = sqlite3.connect(DB)
             cur = con.cursor()
@@ -283,7 +287,6 @@ class Category:
     def __init__(self, category_id, category_name):
         self.category_id = category_id
         self.category_name = category_name
-
 
 class Account:
     #TODO: add CRUD methods for Account

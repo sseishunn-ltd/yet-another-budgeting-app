@@ -5,20 +5,16 @@ import budg_model as model
 import budg_view as view
 from datetime import datetime
 
-def main():
-
+def parse():
     # Parsing command line arguments
     parser = argparse.ArgumentParser(description="CLI tool to view and make records of transactions in budget.", add_help=True)
     subparsers = parser.add_subparsers(title = "Work with transactions", metavar=None, dest="subcommands")
 
     parser_read = subparsers.add_parser("read", help = "Get a list of all transactions from the record.")
-    # TODO: show only X last transactions
-    # TODO: parameter to set X of shown transactions
     # TODO: parameter to filter by column
     parser_read.add_argument("--tail", metavar = "X", help="Show X last transactions")
 
     parser_add = subparsers.add_parser("add", help = "Add a new transaction to the record.")
-    # TODO: add date to parameters
     # TODO: a way to show transactions between two time points
     parser_add.add_argument("--timestamp", help="Date in YYYY-MM-DD format, time will be set to 00:00.")
     parser_add.add_argument("source_from", help="Source account or payee. If no matching entity is found, transaction \
@@ -60,65 +56,87 @@ def main():
     parser_delete.add_argument("--comment", help="Comment.")
 
     args = parser.parse_args()
-        
+
     if args.subcommands == None:
         parser.print_help()
-        return
+        return None
 
     if args.subcommands.lower() == "add" and \
         all(value is None for key, value in vars(args).items() if key != "subcommands"):
         parser_add.print_help()
-        return
+        return {}
 
     if args.subcommands.lower() == "edit" and \
         all(value is None for key, value in vars(args).items() if key != "subcommands"):
         parser_edit.print_help()
-        return
+        return {}
 
     if args.subcommands.lower() == "delete" and \
         all(value is None for key, value in vars(args).items() if key != "subcommands"):
         parser_delete.print_help()
-        return
+        return {}
 
+    return args
+
+def read_function(parsed_args):
+    display_results = view.TransactionListView()
+    if parsed_args.tail:
+        head, result = model.Transaction.get_last_x(parsed_args.tail, 1)
+        display_results.display_transactions(head, result)
+    else:
+        head, result = model.Transaction.get_all()
+        display_results.display_transactions(head, result)
+
+def add_function(parsed_args):
     # Get UNIX timestamp for date
-    # TODO: parse timestamp from parameters and use it if provided!
-    if args.subcommands.lower() == "add":
-        try:
-            dt_input = datetime.fromisoformat(args.timestamp)
-            timestamp = int(datetime.timestamp(dt_input))
-        except:
-            dt_input = datetime.today()
-            timestamp = int(datetime.timestamp(dt_input))
+    timestamp = int(datetime.timestamp(datetime.fromisoformat(parsed_args.timestamp))) \
+        if parsed_args.timestamp else int(datetime.timestamp(datetime.today()))
+    # TODO: get all necessary IDs for the shit provided from interface here
+    trans = model.Transaction() # no params because we don't look up anything
+    trans.save(created_at=timestamp, from_id=parsed_args.source_from, to_id=parsed_args.destination, \
+        category_id=parsed_args.category, amount=parsed_args.amount, comment=parsed_args.comment)
 
-    if args.subcommands.lower() == 'read':
-        display_results = view.TransactionListView()
-        if args.tail:
-            head, result = model.Transaction.get_last_x(args.tail)
-            display_results.display_transactions(head, result)
+def edit_function(parsed_args):
+    trans = model.Transaction(transaction_id=parsed_args.tr_id, created_at=parsed_args.date, from_id=parsed_args.source_from, \
+        to_id=parsed_args.destination, category_id=parsed_args.category, amount=parsed_args.amount, \
+            comment=parsed_args.comment)
+    trans.update(created_at=parsed_args.date_new, from_id=parsed_args.source_from_new, to_id=parsed_args.destination_new, \
+        category_id=parsed_args.category_new, amount=parsed_args.amount_new, comment=parsed_args.comment_new)
+
+# IMPORTANT: it only works by transaction for now
+def delete_function(parsed_args):
+    trans = model.Transaction(transaction_id=parsed_args.tr_id, created_at=None, from_id=parsed_args.source_from, \
+        to_id=parsed_args.destination, category_id=parsed_args.category, amount=parsed_args.amount, \
+            comment=parsed_args.comment)
+    trans.delete()
+
+def main():
+    parsed_args = parse()
+
+    if 'subcommands' in parsed_args:
+        subcommand_functions = {
+        'read': read_function,
+        'add': add_function,
+        'edit': edit_function,
+        'delete': delete_function,
+        }
+
+        selected_function = subcommand_functions.get(parsed_args.subcommands.lower())
+
+        if selected_function:
+            selected_function(parsed_args)
         else:
-            head, result = model.Transaction.get_all()
-            display_results.display_transactions(head, result)
+            return
 
-    if args.subcommands.lower() == 'add':
-        # TODO: get all necessary IDs for the shit provided from interface here
-        trans = model.Transaction() # no params because we don't look up anything
-        trans.save(created_at=timestamp, from_id=args.source_from, to_id=args.destination, category_id=args.category, \
-            amount=args.amount, comment=args.comment)
-
-    if args.subcommands.lower() == 'edit':
-        trans = model.Transaction(transaction_id=args.tr_id, created_at=args.date, from_id=args.source_from, \
-            to_id=args.destination, category_id=args.category, amount=args.amount, comment=args.comment)
-        trans.update(created_at=args.date_new, from_id=args.source_from_new, to_id=args.destination_new, \
-            category_id=args.category_new, amount=args.amount_new, comment=args.comment_new)
-
-    if args.subcommands.lower() == 'delete':
-        trans = model.Transaction(transaction_id=args.tr_id, created_at=None, from_id=args.source_from, to_id=args.destination, \
-            category_id=args.category, amount=args.amount, comment=args.comment)
-        trans.delete()
+    # if parsed_args.subcommands.lower() == 'add':
+    # if parsed_args.subcommands.lower() == 'edit':
+    # if parsed_args.subcommands.lower() == 'delete':
 
     # Debug config
-    config = vars(args)
-    print(f"The arguments list: {config=}")
+    # config = vars(parsed_args)
+    # print("")
+    # print(f"DEBUG: The arguments list: {config=}")
+
 
 if __name__ == "__main__":
     #Run as main program
