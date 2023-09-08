@@ -12,6 +12,7 @@ def parse():
 
     parser_read = subparsers.add_parser("read", help = "Get a list of all transactions from the record.")
     # TODO: parameter to filter by column
+    parser_read.add_argument("--trid", action="store_true", help="Toggle showing transaction IDs in the list")
     parser_read.add_argument("--tail", metavar = "X", help="Show X last transactions")
 
     parser_add = subparsers.add_parser("add", help = "Add a new transaction to the record.")
@@ -81,10 +82,10 @@ def parse():
 def read_function(parsed_args):
     display_results = view.TransactionListView()
     if parsed_args.tail:
-        head, result = model.Transaction.get_last_x(parsed_args.tail, 1)
+        head, result = model.Transaction.get_last_x(parsed_args.tail, parsed_args.trid, show_totals=1)
         display_results.display_transactions(head, result)
     else:
-        head, result = model.Transaction.get_all()
+        head, result = model.Transaction.get_all(parsed_args.trid)
         display_results.display_transactions(head, result)
 
 def add_function(parsed_args):
@@ -97,11 +98,12 @@ def add_function(parsed_args):
         category_id=parsed_args.category, amount=parsed_args.amount, comment=parsed_args.comment)
 
 def edit_function(parsed_args):
-    trans = model.Transaction(transaction_id=parsed_args.tr_id, created_at=parsed_args.date, from_id=parsed_args.source_from, \
-        to_id=parsed_args.destination, category_id=parsed_args.category, amount=parsed_args.amount, \
-            comment=parsed_args.comment)
-    trans.update(created_at=parsed_args.date_new, from_id=parsed_args.source_from_new, to_id=parsed_args.destination_new, \
-        category_id=parsed_args.category_new, amount=parsed_args.amount_new, comment=parsed_args.comment_new)
+    trans = model.Transaction(transaction_id=parsed_args.tr_id, created_at=parsed_args.date, \
+        from_id=parsed_args.source_from, to_id=parsed_args.destination, category_id=parsed_args.category, \
+            amount=parsed_args.amount, comment=parsed_args.comment)
+    trans.update(created_at=parsed_args.date_new, from_id=parsed_args.source_from_new, \
+        to_id=parsed_args.destination_new, category_id=parsed_args.category_new, amount=parsed_args.amount_new, \
+            comment=parsed_args.comment_new)
 
 # IMPORTANT: it only works by transaction for now
 def delete_function(parsed_args):
@@ -128,15 +130,10 @@ def main():
         else:
             return
 
-    # if parsed_args.subcommands.lower() == 'add':
-    # if parsed_args.subcommands.lower() == 'edit':
-    # if parsed_args.subcommands.lower() == 'delete':
-
     # Debug config
     # config = vars(parsed_args)
     # print("")
     # print(f"DEBUG: The arguments list: {config=}")
-
 
 if __name__ == "__main__":
     #Run as main program

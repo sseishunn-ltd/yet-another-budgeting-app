@@ -62,13 +62,6 @@ class Transaction:
         display_results.show_transaction_update_attempt(head, result)
 
         try:
-            display_results = view.TransactionEditView()
-            head, result = self.get_by_id(self.transaction_id)
-            display_results.show_transaction_update_attempt(head, result)
-        except:
-            pass
-
-        try:
             con = sqlite3.connect(DB)
             cur = con.cursor()
             query = """
@@ -188,17 +181,26 @@ class Transaction:
                 con.close()
 
     @staticmethod
-    def get_all():
+    def get_all(trid = None):
         """Retrieve all transactions from the database"""
         con = None
+
+        print(trid)
+    
         try:
             con = sqlite3.connect(DB)
             con.row_factory = sqlite3.Row
             cur = con.cursor()
 
             #get table rows
-            cur.execute("""
-                        SELECT datetime(a.created_at, 'unixepoch') as datetime, 
+            if trid == True:
+                sql_query = """SELECT a.transaction_id,
+                            """
+            else:
+                sql_query = """SELECT
+                            """
+            sql_query += """
+                            datetime(a.created_at, 'unixepoch') as datetime, 
                             b.category_name,
                             CAST(a.amount AS FLOAT) as amount,
                             c.account_name as acc_from,
@@ -211,15 +213,22 @@ class Transaction:
                             LEFT JOIN accounts as d ON a.to_id = d.account_id
                         ORDER BY
                             a.transaction_id;
-                        """)
+                        """
+
+            cur.execute(sql_query)
             result = cur.fetchall()
 
             #get table headers
             head = result[0].keys()
 
             #get table footer
-            cur.execute("""
-                        SELECT 
+            if trid:
+                sql_query = """SELECT NULL,
+                            """
+            else:
+                sql_query = """SELECT
+                            """
+            sql_query += """
                             NULL, 
                             'TOTAL', 
                             SUM(amount), 
@@ -227,7 +236,8 @@ class Transaction:
                             NULL, 
                             NULL
                         FROM transactions_EUR
-                        """)
+                        """
+            cur.execute(sql_query)
             totals = cur.fetchone()
             result.append(totals)
 
@@ -245,7 +255,7 @@ class Transaction:
                 con.close()
 
     @staticmethod
-    def get_last_x(items, show_totals = None):
+    def get_last_x(items, trid = None, show_totals = None):
         """Retrieve last (items) transactions from the database"""
         con = None
         try:
@@ -254,9 +264,19 @@ class Transaction:
             cur = con.cursor()
 
             #get table rows
-            cur.execute(f"""
+            if trid:
+                sql_query = """
                         SELECT * FROM (
-                            SELECT datetime(a.created_at, 'unixepoch') as datetime, 
+                            SELECT a.transaction_id,
+                            
+                            """
+            else:
+                sql_query = """
+                        SELECT * FROM (
+                            SELECT 
+                            """
+            sql_query += f"""
+                                datetime(a.created_at, 'unixepoch') as datetime, 
                                 b.category_name,
                                 CAST(a.amount AS FLOAT) as amount,
                                 c.account_name as acc_from,
@@ -272,7 +292,8 @@ class Transaction:
                             DESC LIMIT {items})
                         ORDER BY
                             datetime ASC;
-                        """)
+                        """
+            cur.execute(sql_query)
             result = cur.fetchall()
 
             #get table headers
@@ -280,8 +301,13 @@ class Transaction:
 
             if show_totals != None:
                 #get table footer
-                cur.execute("""
-                            SELECT 
+                if trid:
+                    sql_query = """SELECT NULL,
+                                """
+                else:
+                    sql_query = """SELECT
+                                """
+                sql_query += """
                                 NULL, 
                                 'TOTAL', 
                                 SUM(amount), 
@@ -289,7 +315,8 @@ class Transaction:
                                 NULL, 
                                 NULL
                             FROM transactions_EUR
-                            """)
+                            """
+                cur.execute(sql_query)
                 totals = cur.fetchone()
                 result.append(totals)
 
@@ -317,7 +344,8 @@ class Transaction:
 
             #get table rows
             cur.execute(f"""
-                        SELECT datetime(a.created_at, 'unixepoch') as datetime, 
+                        SELECT a.transaction_id,
+                            datetime(a.created_at, 'unixepoch') as datetime, 
                             b.category_name,
                             CAST(a.amount AS FLOAT) as amount,
                             c.account_name as acc_from,
