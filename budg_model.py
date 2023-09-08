@@ -131,8 +131,7 @@ class Transaction:
         """Delete the transaction from the database"""
         con = None
 
-        # solves only the lookup by ID, nothing else
-        # TODO: add proper treatment of other deletion options
+        # TODO: add proper treatment of other deletion options (now has only the lookup by ID, nothing else)
 
         display_results = view.TransactionDeleteView()
         head, result = self.get_by_id(self.transaction_id)

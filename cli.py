@@ -47,14 +47,16 @@ def parse():
         entries.")
     parser_edit.add_argument("--comment_new", help="New Comment to be set on looked up entries.")
 
-    parser_delete = subparsers.add_parser("delete", help = "Delete transaction - looked up by provided parameter values. \
-        If no parameters are set, all transactions will be deleted!")
+    parser_delete = subparsers.add_parser("delete", help = "Delete transaction - looked up by provided parameter values.Use --all with care – it will delete all transactions!")
+    # commented out the arguments as the function does not work with anything except tr_id for now
+    # TODO: implement deletion with filters
+    # parser_delete.add_argument("--all", action="store_true", help="Source account or payee.")
     parser_delete.add_argument("--tr_id", help="Transaction ID.")
-    parser_delete.add_argument("--source_from", help="Source account or payee.")
-    parser_delete.add_argument("--destination", help="Destination account or payee.")
-    parser_delete.add_argument("--category", help="Category to which the transaction is attributed.")
-    parser_delete.add_argument("--amount", type=float, help="Amount of the transaction.")
-    parser_delete.add_argument("--comment", help="Comment.")
+    # parser_delete.add_argument("--source_from", help="Source account or payee.")
+    # parser_delete.add_argument("--destination", help="Destination account or payee.")
+    # parser_delete.add_argument("--category", help="Category to which the transaction is attributed.")
+    # parser_delete.add_argument("--amount", type=float, help="Amount of the transaction.")
+    # parser_delete.add_argument("--comment", help="Comment.")
 
     args = parser.parse_args()
 
@@ -92,7 +94,6 @@ def add_function(parsed_args):
     # Get UNIX timestamp for date
     timestamp = int(datetime.timestamp(datetime.fromisoformat(parsed_args.timestamp))) \
         if parsed_args.timestamp else int(datetime.timestamp(datetime.today()))
-    # TODO: get all necessary IDs for the shit provided from interface here
     trans = model.Transaction() # no params because we don't look up anything
     trans.save(created_at=timestamp, from_id=parsed_args.source_from, to_id=parsed_args.destination, \
         category_id=parsed_args.category, amount=parsed_args.amount, comment=parsed_args.comment)
@@ -105,11 +106,13 @@ def edit_function(parsed_args):
         to_id=parsed_args.destination_new, category_id=parsed_args.category_new, amount=parsed_args.amount_new, \
             comment=parsed_args.comment_new)
 
-# IMPORTANT: it only works by transaction for now
+# IMPORTANT: it only works by transaction for now, commented out the rest of variables
 def delete_function(parsed_args):
-    trans = model.Transaction(transaction_id=parsed_args.tr_id, created_at=None, from_id=parsed_args.source_from, \
-        to_id=parsed_args.destination, category_id=parsed_args.category, amount=parsed_args.amount, \
-            comment=parsed_args.comment)
+    trans = model.Transaction(transaction_id=parsed_args.tr_id, \
+                # created_at=None, from_id=parsed_args.source_from, \
+                # to_id=parsed_args.destination, category_id=parsed_args.category, amount=parsed_args.amount, \
+                # comment=parsed_args.comment \
+                    )
     trans.delete()
 
 def main():
