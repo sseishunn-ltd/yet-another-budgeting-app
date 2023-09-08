@@ -1,4 +1,3 @@
 # yet-another-budgeting-app
 
-Work in progress... work in gestation.
-A little bit more now :)
+My little project for creating an expense tracker / budgeting app for myself.
