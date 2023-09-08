@@ -1,6 +1,8 @@
 import sqlite3
 import budg_view as view
 
+#dummy
+
 DB = "budget.db"
 ERR_DB = "\nAn error occurred while working with the database:"
 ERR_NON_DB = "Some error not related to database occured:"
