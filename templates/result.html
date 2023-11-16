@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title></title>
+    <style>
+        table {
+            width: 500px;
+            margin: 0px
+        }
+        #back {
+            clear: both
+        }
+    </style>
+</head>
+<body>
+    <h2>Form Data:</h2>
+    <table style="border: 1px solid black">
+        <caption>That's just what was sent in the form.</caption>
+        <thead>
+            <tr><th>Key</th><th>Value</th></tr>
+        </thead>
+        <tbody style="border: 1px solid black">
+            {% for key, values in form_data.items() %}
+            <tr>
+                <td style="border: 1px solid black">{{key}}</td>
+                <td style="border: 1px solid black">{{values}}</td>
+            </tr>
+            {% endfor %}
+        </tbody><br>
+    </table>
+    {{form_data.items()}}
+    <p><a href="/" id="back">Back</a></p>
+</body>
+</html>

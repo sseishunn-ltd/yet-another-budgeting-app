@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <style>
+            td, th {
+                border: 1px dotted black;
+                padding: 5px 15px 5px 15px;
+                }
+            th {
+                font-weight: bold;
+                text-align: left;
+            }
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                $(".myButton").click(function(){
+                    var buttonId = $(this).attr('id');
+                    console.log("Button ID:", buttonId); // Debugging line
+                    $.ajax({
+                        url: '/delete_transaction',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ button_id: buttonId }), // Send button ID to the server
+                        success: function(response) {
+                            // Handle success
+                            console.log("Awwww:", JSON.stringify({ button_id: buttonId }))
+                            if (response.status === true) {
+                                // Reload the page
+                                window.location.reload();
+                            } else {
+                                // Handle other cases or do nothing
+                                console.log("Response from server:", response);
+                            }
+                        },
+                        error: function(error) {
+                            // Handle error
+                            console.log("Buttt:", JSON.stringify({ button_id: buttonId }))
+                            console.log("Error:", error);
+                        }
+                    });
+                });
+            });
+        </script>
+    </head>
+
+    <body>
+        <h1>Yet Another Budgeting App</h1>
+        <p>Sooner or later it's going to work...</p>
+        <table>
+            <thead><tr>
+                {% for item in head %}
+                    <th>{{item}}</th>
+                {% endfor %}
+            </tr></thead>
+            <tbody>
+                {% for item in body %}
+                    <tr>
+                    {% for cell in item %}
+                        <td>{{cell}}</td>
+                    {% endfor %}
+                    <td><button type="button" class="myButton" id="{{item[0]}}">X</button></td>
+                    </tr>
+                {% endfor %}
+                <form method="post">
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <select id="category" name="category">
+                            {% for item in categories %}
+                            <option value="{{item[0]}}">{{item[1]}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="text" name="amount"></td>
+                    <td>
+                        <select id="acc_from" name="account_from">
+                            {% for item in accounts %}
+                            <option value="{{item[0]}}">{{item[1]}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <select id="acc_to" name="account_to">
+                            {% for item in accounts %}
+                            <option value="{{item[0]}}">{{item[1]}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="text" name="comment"></td>
+                    <td></td>
+                </tr>
+                <tr><td colspan="6" class="center"><input type="submit"></td></tr>
+                </form>
+            </tbody>
+        </table>
+        <table>
+            <tr>
+                <td>
+                    <p>Categories:</p>
+                    {% for item in categories %}
+                        <p>{{item[0]}}: {{item[1]}}</p>
+                    {% endfor %}
+                </td>
+                <td>
+                    <p>Accounts:</p>
+                    {% for item in accounts %}
+                        <p>{{item[0]}}: {{item[1]}}</p>
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>
+        <p><a href="/">Back to main!</a></p>
+    </body>
+</html>
